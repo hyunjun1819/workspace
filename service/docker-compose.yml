@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  lora-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: video-lora-manager
+    ports:
+      - "8189:8189"
+    volumes:
+      # Mount the ComfyUI models directory (read-only for safety)
+      - ../models:/comfyui/models:ro
+      # Persist database
+      - ./backend/data:/app/data
+    environment:
+      - COMFYUI_PATH=/comfyui
+      - COMFYUI_HOST=comfyui
+      - COMFYUI_PORT=8188
+      - HOST=0.0.0.0
+      - PORT=8189
+      - DEBUG=false
+    networks:
+      - comfyui-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8189/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  comfyui-network:
+    external: true
+    name: comfyui-server_default
